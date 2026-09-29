@@ -2,6 +2,7 @@
 
 class QByteArray;
 class QBoxLayout;
+class QHBoxLayout;
 class QCloseEvent;
 class QComboBox;
 class QKeyEvent;

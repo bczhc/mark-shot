@@ -1,5 +1,7 @@
 #include "shot_window_module.h"
 
+#include "selection_aspect/selection_aspect_ratio.h"
+
 #include "debug_log.h"
 #include "selection_loupe.h"
 
@@ -71,6 +73,8 @@ void ShotWindow::paintEvent(QPaintEvent *event)
     if (hasUsableSelection()) {
         const QRectF widgetSelection = imageRectToWidget(selection);
         painter.save();
+        // 聚光灯遮罩在所有标注之下，保留区域外的标注不会被压暗
+        drawSpotlightOverlay(painter, widgetSelection, true);
         for (const Annotation &annotation : m_annotations) {
             if (m_editingTextAnnotationId.has_value() && annotation.id == *m_editingTextAnnotationId) {
                 continue;
@@ -119,7 +123,14 @@ void ShotWindow::paintEvent(QPaintEvent *event)
         const bool selectionInfoVisible = m_selectionDrag != SelectionDrag::None
             || (m_showSelectionInfo && m_selectionInfoTimer.isValid() && m_selectionInfoTimer.elapsed() <= 1000);
         if (selectionInfoVisible) {
-            const QString sizeText = QStringLiteral("%1 x %2").arg(qRound(selection.width())).arg(qRound(selection.height()));
+            QString sizeText = QStringLiteral("%1 x %2").arg(qRound(selection.width())).arg(qRound(selection.height()));
+            // 锁定比例时在尺寸后标出比例，提醒拖动会保持比例
+            for (const auto &preset : markshot::selection_aspect::aspectRatioPresets()) {
+                if (m_selectionAspectRatio > 0.0 && std::abs(preset.ratio - m_selectionAspectRatio) < 1e-6) {
+                    sizeText += QStringLiteral("  ") + preset.label;
+                    break;
+                }
+            }
             painter.setFont(markshot::theme::uiFont(11, QFont::DemiBold));
             const QFontMetrics metrics(painter.font());
             const QRectF labelRect(widgetSelection.left() + 10.0,
@@ -474,6 +485,7 @@ void ShotWindow::mousePressEvent(QMouseEvent *event)
     }
     annotation.arrowStyle = m_arrowStyle;
     annotation.rectangleStyle = m_rectangleStyle;
+    annotation.mosaicStyle = m_mosaicStyle;
     annotation.markerShape = m_markerShape;
     annotation.fontFamily = m_textFontFamily;
     annotation.rotationDegrees = 0.0;

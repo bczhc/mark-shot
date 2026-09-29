@@ -68,3 +68,48 @@ qt_add_executable(mark-shot-interaction-cursor-test
 target_include_directories(mark-shot-interaction-cursor-test PRIVATE src)
 target_link_libraries(mark-shot-interaction-cursor-test PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test)
 add_test(NAME interaction-cursor COMMAND mark-shot-interaction-cursor-test -o -,txt)
+
+qt_add_executable(mark-shot-selection-aspect-ratio-test
+    tests/selection_aspect_ratio_test.cpp
+    src/selection_aspect/selection_aspect_ratio.cpp
+    src/selection_aspect/selection_aspect_ratio.h
+)
+target_include_directories(mark-shot-selection-aspect-ratio-test PRIVATE src)
+target_link_libraries(mark-shot-selection-aspect-ratio-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME selection-aspect-ratio COMMAND mark-shot-selection-aspect-ratio-test)
+
+qt_add_executable(mark-shot-annotation-filters-test
+    tests/annotation_filters_test.cpp
+    src/annotation_filters/image_filter_effects.cpp
+    src/annotation_filters/image_filter_effects.h
+    src/annotation_filters/spotlight_overlay.cpp
+    src/annotation_filters/spotlight_overlay.h
+)
+target_include_directories(mark-shot-annotation-filters-test PRIVATE src)
+target_link_libraries(mark-shot-annotation-filters-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME annotation-filters COMMAND mark-shot-annotation-filters-test)
+
+qt_add_executable(mark-shot-ocr-table-layout-test
+    tests/ocr_table_layout_test.cpp
+    src/ocr_result.cpp
+    src/ocr_result.h
+    src/ocr_table/ocr_table_layout.cpp
+    src/ocr_table/ocr_table_layout.h
+)
+target_include_directories(mark-shot-ocr-table-layout-test PRIVATE src)
+target_link_libraries(mark-shot-ocr-table-layout-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+)
+add_test(NAME ocr-table-layout COMMAND mark-shot-ocr-table-layout-test)

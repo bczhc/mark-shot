@@ -1,6 +1,7 @@
 #pragma once
 
 #include "capture_cross_cursor.h"
+#include "ocr_result.h"
 #include "shot_window.h"
 #include "scroll/scroll_session_window.h"
 
@@ -163,7 +164,10 @@ markshot::scroll::ScrollSessionUiConfig scrollSessionUiConfig();
  * @param sourceImage 本次识别使用的原始截图，缺失时不显示预览。
  * @return OCR 结果浮窗。
  */
-QWidget *createOcrResultWindow(QString text, QScreen *targetScreen, QImage sourceImage = {});
+QWidget *createOcrResultWindow(QString text,
+                               QScreen *targetScreen,
+                               QImage sourceImage = {},
+                               QVector<markshot::ocr::Token> tokens = {});
 QWidget *createCodeScanResultWindow(QString text);
 QWidget *createPinnedImageWindow(QImage image, std::optional<QPoint> initialTopLeft = std::nullopt);
 

@@ -17,6 +17,8 @@ struct SingleInstanceCommand {
     bool capture = false;
     bool fullscreen = false;
     bool allOutputs = false;
+    // 延时截图毫秒数，0 表示立即截图
+    int captureDelayMs = 0;
     bool recordingStatus = false;
     bool stopRecording = false;
     bool pauseRecording = false;

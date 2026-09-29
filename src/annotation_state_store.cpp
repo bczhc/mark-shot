@@ -25,6 +25,7 @@ constexpr const char *kKeyPenWidth = "penWidth";
 constexpr const char *kKeyShapeWidth = "shapeWidth";
 constexpr const char *kKeyNumberWidth = "numberWidth";
 constexpr const char *kKeyMosaicBlockSize = "mosaicBlockSize";
+constexpr const char *kKeyMosaicStyle = "mosaicStyle";
 constexpr const char *kKeyShapeFilled = "shapeFilled";
 constexpr const char *kKeyRectangleCornerRadius = "rectangleCornerRadius";
 constexpr const char *kKeyRectangleStyle = "rectangleStyle";
@@ -148,7 +149,12 @@ AnnotationState loadAnnotationState()
         root.value(QString::fromLatin1(kKeyRectangleStyle)),
         state.rectangleStyle,
         static_cast<int>(ShotWindow::RectangleStyle::Stroke),
-        static_cast<int>(ShotWindow::RectangleStyle::Invert));
+        static_cast<int>(ShotWindow::RectangleStyle::Spotlight));
+    state.mosaicStyle = enumFromInt<ShotWindow::MosaicStyle>(
+        root.value(QString::fromLatin1(kKeyMosaicStyle)),
+        state.mosaicStyle,
+        static_cast<int>(ShotWindow::MosaicStyle::Pixelate),
+        static_cast<int>(ShotWindow::MosaicStyle::Brighten));
     state.markerShape = enumFromInt<ShotWindow::MarkerShape>(
         root.value(QString::fromLatin1(kKeyMarkerShape)),
         state.markerShape,
@@ -224,6 +230,7 @@ bool saveAnnotationState(const AnnotationState &state)
     root.insert(QString::fromLatin1(kKeyNumberWidth), state.numberWidth);
     root.insert(QString::fromLatin1(kKeyTextSize), state.textSize);
     root.insert(QString::fromLatin1(kKeyMosaicBlockSize), state.mosaicBlockSize);
+    root.insert(QString::fromLatin1(kKeyMosaicStyle), static_cast<int>(state.mosaicStyle));
     root.insert(QString::fromLatin1(kKeyShapeFilled), state.shapeFilled);
     root.insert(QString::fromLatin1(kKeyRectangleCornerRadius), state.rectangleCornerRadius);
     root.insert(QString::fromLatin1(kKeyRectangleStyle), static_cast<int>(state.rectangleStyle));

@@ -6,9 +6,12 @@
 
 namespace markshot::shot {
 
-QWidget *createOcrResultWindow(QString text, QScreen *targetScreen, QImage sourceImage)
+QWidget *createOcrResultWindow(QString text,
+                               QScreen *targetScreen,
+                               QImage sourceImage,
+                               QVector<markshot::ocr::Token> tokens)
 {
-    return new OcrResultWindow(std::move(text), targetScreen, std::move(sourceImage));
+    return new OcrResultWindow(std::move(text), targetScreen, std::move(sourceImage), std::move(tokens));
 }
 
 }  // namespace markshot::shot

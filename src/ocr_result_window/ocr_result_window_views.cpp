@@ -1,6 +1,8 @@
 #include "ocr_result_window/ocr_result_window.h"
 
+#include "clipboard_image.h"
 #include "ocr_result_window/ocr_source_preview.h"
+#include "ocr_table/ocr_table_pane.h"
 #include "ocr_result_window/ocr_text_pane.h"
 #include "ui/i18n.h"
 #include "ui/theme.h"
@@ -44,7 +46,9 @@ void restoreScrollOffset(QTextEdit *editor, QPoint offset)
 
 }
 
-QWidget *OcrResultWindow::createContentViews(const QString &text, QImage sourceImage)
+QWidget *OcrResultWindow::createContentViews(const QString &text,
+                                             QImage sourceImage,
+                                             const QVector<markshot::ocr::Token> &tokens)
 {
     m_contentViews = new QStackedWidget(this);
     m_contentViews->setObjectName(QStringLiteral("ocrContentViews"));
@@ -81,7 +85,18 @@ QWidget *OcrResultWindow::createContentViews(const QString &text, QImage sourceI
     scroll->viewport()->setAutoFillBackground(false);
     m_contentViews->addWidget(scroll);
 
-    // 2. 【OCR】【原图页面】原图与文本互斥显示，页面切换不销毁编辑器
+    // 2. 【OCR】【表格页面】文字块能排成表格时追加表格页，识别结果不像表格时不打扰
+    const markshot::ocr_table::OcrTable table = markshot::ocr_table::inferTable(tokens);
+    if (markshot::ocr_table::looksLikeTable(table)) {
+        m_tablePane = new markshot::ocr_table::OcrTablePane(table, m_contentViews);
+        m_tablePane->setObjectName(QStringLiteral("ocrTablePane"));
+        connect(m_tablePane, &markshot::ocr_table::OcrTablePane::copyRequested, this, [this](const QString &value) {
+            m_tablePane->showCopyFeedback(markshot::copyTextToClipboard(value));
+        });
+        m_contentViews->addWidget(m_tablePane);
+    }
+
+    // 3. 【OCR】【原图页面】原图与文本互斥显示，页面切换不销毁编辑器
     if (!sourceImage.isNull()) {
         m_contentViews->addWidget(new OcrSourcePreview(std::move(sourceImage), m_contentViews));
     }

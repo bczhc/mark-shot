@@ -125,11 +125,22 @@ enum class MagnifierShape {
     Rectangle,
 };
 
-/// @brief 矩形标注的描边、高亮或反色样式
+/// @brief 矩形标注的描边、高亮、反色或聚光灯样式，已发布编号不得重排
 enum class RectangleStyle {
     Stroke,
     Highlight,
     Invert,
+    // 压暗矩形以外的选区，矩形内保持原样
+    Spotlight,
+};
+
+/// @brief 马赛克工具的滤镜效果，已发布编号不得重排
+enum class MosaicStyle {
+    Pixelate = 0,
+    Blur,
+    Grayscale,
+    Invert,
+    Brighten,
 };
 
 /// @brief 图章形状，已发布编号不得重排
@@ -225,6 +236,7 @@ struct Annotation {
     bool textItalic = false;
     RectangleStyle rectangleStyle = RectangleStyle::Stroke;
     MarkerShape markerShape = MarkerShape::Triangle;
+    MosaicStyle mosaicStyle = MosaicStyle::Pixelate;
 };
 
 /// @brief 标注撤销与重做使用的数据快照

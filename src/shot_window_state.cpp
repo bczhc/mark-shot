@@ -30,6 +30,7 @@ void ShotWindow::loadAnnotationStateFromDisk()
     m_numberWidth = state.numberWidth;
     m_textSize = state.textSize;
     m_mosaicBlockSize = state.mosaicBlockSize;
+    m_mosaicStyle = state.mosaicStyle;
 
     // 4. 矩形相关
     m_shapeFilled = state.shapeFilled;
@@ -102,6 +103,7 @@ void ShotWindow::flushAnnotationStateNow()
     state.numberWidth = m_numberWidth;
     state.textSize = m_textSize;
     state.mosaicBlockSize = m_mosaicBlockSize;
+    state.mosaicStyle = m_mosaicStyle;
     state.shapeFilled = m_shapeFilled;
     state.rectangleCornerRadius = m_rectangleCornerRadius;
     state.rectangleStyle = m_rectangleStyle;

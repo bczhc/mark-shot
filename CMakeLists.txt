@@ -79,6 +79,7 @@ endif()
 
 include(cmake/ipc_sources.cmake)
 include(cmake/cli_sources.cmake)
+include(cmake/capture_delay_sources.cmake)
 include(cmake/notification_sources.cmake)
 include(cmake/pipewire_capture_sources.cmake)
 include(cmake/provider_sources.cmake)
@@ -92,6 +93,7 @@ qt_add_executable(mark-shot
     resources.qrc
     ${MARK_SHOT_IPC_SOURCES}
     ${MARK_SHOT_CLI_SOURCES}
+    ${MARK_SHOT_CAPTURE_DELAY_SOURCES}
     ${MARK_SHOT_NOTIFICATION_SOURCES}
     ${MARK_SHOT_PROVIDER_SOURCES}
     ${MARK_SHOT_MARKETPLACE_SOURCES}
@@ -175,6 +177,7 @@ qt_add_executable(mark-shot
     src/window_detection_session.h
     src/windows_integration.cpp
     src/windows_integration.h
+    src/windows_tray_config.cpp
     src/windows_tray_controller.cpp
     src/windows_tray_controller.h
     src/screen_capture.cpp

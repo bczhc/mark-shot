@@ -1,7 +1,9 @@
 include(cmake/ocr_result_window_sources.cmake)
+include(cmake/editor_feature_sources.cmake)
 
 set(MARK_SHOT_WINDOW_SOURCES
     ${MARK_SHOT_OCR_WINDOW_SOURCES}
+    ${MARK_SHOT_EDITOR_FEATURE_SOURCES}
     src/annotation_state_store.cpp
     src/annotation_state_store.h
     src/capture_cross_cursor.cpp

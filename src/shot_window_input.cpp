@@ -129,7 +129,8 @@ void ShotWindow::mouseMoveEvent(QMouseEvent *event)
             const QRectF previousSelection = normalizedSelection();
             const bool previousSelectionUsable = previousSelection.width() >= kMinSelectionSize
                 && previousSelection.height() >= kMinSelectionSize;
-            m_selection = normalizedRect(m_selectionStart, imagePoint);
+            m_selection = creationSelectionRect(m_selectionStart, imagePoint,
+                                                event->modifiers().testFlag(Qt::ShiftModifier));
             revealSelectionInfo();
             scheduleInitialSelectionRepaint(
                 initialSelectionDirtyRegion(previousSelection, previousSelectionUsable) | dirty);
