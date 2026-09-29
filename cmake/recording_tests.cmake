@@ -48,6 +48,21 @@ target_link_libraries(mark-shot-recording-frame-grabber-test
 )
 add_test(NAME recording-frame-grabber COMMAND mark-shot-recording-frame-grabber-test)
 
+qt_add_executable(mark-shot-recording-polling-capture-stream-test
+    tests/recording_polling_capture_stream_test.cpp
+    src/recording/recording_capture_stream.h
+    src/recording/recording_polling_capture_stream.cpp
+    src/recording/recording_polling_capture_stream.h
+)
+target_include_directories(mark-shot-recording-polling-capture-stream-test PRIVATE src)
+target_link_libraries(mark-shot-recording-polling-capture-stream-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME recording-polling-capture-stream COMMAND mark-shot-recording-polling-capture-stream-test)
+
 qt_add_executable(mark-shot-recording-video-encoder-options-test
     tests/recording_video_encoder_options_test.cpp
     src/recording/recording_container_format.cpp

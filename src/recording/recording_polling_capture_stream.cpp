@@ -3,6 +3,7 @@
 #include "screen_capture.h"
 
 #include <QImage>
+#include <QPointer>
 
 #include <algorithm>
 #include <utility>
@@ -73,10 +74,18 @@ void RecordingPollingCaptureStream::captureFrame()
     request.includeCursor = true;
     request.targetFps = m_options.mode == RecordingMode::Video ? m_options.fps : 0;
 
+    // 1. Wayland 抓帧可能进入门户请求等嵌套事件循环，期间录制可被停止并销毁本对象
+    QPointer<RecordingPollingCaptureStream> self(this);
     const CaptureResult result = captureScreenFrame(request);
+    if (!self) {
+        return;
+    }
+    m_capturing = false;
+    if (!m_running) {
+        return;
+    }
     const qint64 captureMs = captureElapsed.elapsed();
     if (result.image.isNull()) {
-        m_capturing = false;
         emit failed(result.error.isEmpty()
                         ? QStringLiteral("screen recording frame capture failed")
                         : result.error);
@@ -87,10 +96,13 @@ void RecordingPollingCaptureStream::captureFrame()
     sample.image = result.image;
     sample.timestampMs = m_clock.elapsed();
     sample.sequence = ++m_sequence;
-    m_capturing = false;
     advanceNextCaptureTime();
     updateAdaptivePacing(captureMs);
+    // 2. 接收方处理帧时可能同步停止录制并销毁采集流，发射后需再次确认对象存活
     emit frameReady(sample);
+    if (!self) {
+        return;
+    }
     scheduleNextCapture();
 }
 
