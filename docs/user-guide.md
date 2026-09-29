@@ -172,6 +172,12 @@ edge or corner by one image pixel; away from a handle they move the whole region
 Hold Shift for ten pixels. Arrow keys also work during a drag and remain available
 when the loupe is disabled.
 
+Hold `Shift` while dragging out a region to get a square. After selecting, press
+`Ctrl+R` to open the size panel: type an exact width and height (image pixels) or
+lock a 1:1, 4:3, 3:2, 16:9, 21:9, 3:4 or 9:16 ratio. While locked, dragging edges or
+corners keeps the ratio and the size badge shows it. The lock lasts for the current
+capture only.
+
 ---
 
 ## 4. Annotation Tools
@@ -186,12 +192,12 @@ the annotation toolbar. Tools are switched with the number keys or the toolbar:
 | `P` | Pen | smooth freehand strokes |
 | `L` | Line | straight lines |
 | `H` | Highlighter | semi-transparent marker; freehand or straight line style |
-| `R` | Rectangle | box with `Stroke` / `Highlight` / `Invert` styles, rounded corners |
+| `R` | Rectangle | box with `Stroke` / `Highlight` / `Invert` / `Spotlight` styles, rounded corners; Spotlight dims everything outside the box |
 | `E` | Ellipse | ellipse / circle |
 | `A` | Arrow | classic arrows (fletched, KDE, bidirectional) |
 | `T` | Text | rich text; wheel or sliders resize; diagonal handles scale both, side handles adjust wrap; exact pt size, font family, bold / italic in the font panel |
 | `N` | Number | sequential numbered markers (Arabic, alpha, roman, Chinese, …) |
-| `M` | Mosaic | acrylic frost blur to hide sensitive content |
+| `M` | Mosaic | switch between `Pixelate` / `Blur` / `Grayscale` / `Invert` / `Brighten` in the property panel; the wheel sets strength |
 | `G` | Laser | temporary strokes that dissolve automatically |
 
 Drawing tips:
@@ -262,7 +268,9 @@ KWin script so the sticker stays above other windows. The window remains a
 normal xdg-toplevel, so dragging and resizing are unchanged.
 
 The OCR result window opens with the editable recognized text. The **Text / Source image**
-tabs share one content area. The image scales to fit the window; returning to text
+tabs share one content area. When the recognized text lines up in rows and columns, a
+**Table** tab appears; cells are editable and **Copy** offers spreadsheet (TSV),
+Markdown, CSV and HTML formats. The image scales to fit the window; returning to text
 restores edits, undo history, scroll positions, and pane sizes. **Translate** in the
 top bar reveals the translation pane, with language and translation controls above
 the editors, then starts a translation with the saved language. Each pane has its own copy action and
@@ -329,6 +337,24 @@ mark-shot --list-displays
 
 All headless options are mutually exclusive with a positional image file.
 See the README for the full argument table.
+
+### 7.1 Delayed capture
+
+`--delay <seconds>` waits before capturing (0–60, decimals allowed). Use it to
+capture menus, tooltips or hover states that disappear when the capture hotkey
+is pressed.
+
+```bash
+# interactive capture after 3 seconds
+mark-shot --delay 3
+
+# headless capture after 1.5 seconds
+mark-shot --delay 1.5 --capture-to /tmp/shot.png
+```
+
+When an instance is already running, the delay is forwarded to it. A new
+delayed request replaces one that has not fired yet. The tray menu also has
+**Delayed Capture** with 3 / 5 / 10 second presets and a cancel entry.
 
 ---
 

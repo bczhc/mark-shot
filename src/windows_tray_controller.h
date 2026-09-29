@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QString>
 
+#include "capture_delay/delayed_capture_tray_menu.h"
 #include "recording/recording_options.h"
 
 #include <functional>
@@ -46,6 +47,13 @@ public:
     static Config readConfig();
 
     void setCaptureCallbacks(Callback capture, Callback fullscreen);
+
+    /**
+     * 设置托盘「延时截图」子菜单的调度回调，需在 start() 之前调用。
+     * @param callbacks 计划、取消与查询回调。
+     * @return 无返回值。
+     */
+    void setDelayedCaptureCallbacks(capture_delay::DelayedCaptureMenuCallbacks callbacks);
     void setRecordingRegionCallback(RecordingRegionCallback callback);
     bool start();
     QString errorString() const;
@@ -83,6 +91,7 @@ private:
     Config m_config;
     Callback m_captureCallback;
     Callback m_fullscreenCaptureCallback;
+    capture_delay::DelayedCaptureMenuCallbacks m_delayedCaptureCallbacks;
     RecordingRegionCallback m_recordingRegionCallback;
     QMenu *m_menu = nullptr;
     QSystemTrayIcon *m_tray = nullptr;

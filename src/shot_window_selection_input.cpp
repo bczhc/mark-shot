@@ -20,6 +20,7 @@ void ShotWindow::refreshAdjustedSelection()
     updateOpenWithPanelGeometry();
     updateExtensionPanelGeometry();
     updateTextEditorGeometry();
+    updateSelectionSizePanelGeometry();
     update();
 }
 
@@ -27,8 +28,11 @@ void ShotWindow::updateSelectionDrag(QPointF imagePoint)
 {
     m_startupHoverImagePoint = clampImagePoint(imagePoint);
     m_startupHoverValid = true;
-    m_selection = adjustedSelectionRect(m_selectionBeforeDrag, m_selectionDrag,
-                                        m_dragStart, m_startupHoverImagePoint, m_frozenFrame.size());
+    m_selection = aspectLockedSelection(
+        m_selectionBeforeDrag,
+        m_selectionDrag,
+        adjustedSelectionRect(m_selectionBeforeDrag, m_selectionDrag,
+                              m_dragStart, m_startupHoverImagePoint, m_frozenFrame.size()));
     refreshAdjustedSelection();
 }
 
@@ -57,7 +61,8 @@ bool ShotWindow::handleSelectionAdjustmentKey(QKeyEvent *event)
     const QPoint delta = selectionCursorNudgeDelta(event->key(),
                                                    event->modifiers().testFlag(Qt::ShiftModifier));
     QPointF target = pointer + delta;
-    m_selection = adjustedSelectionRect(before, handle, pointer, target, m_frozenFrame.size());
+    m_selection = aspectLockedSelection(
+        before, handle, adjustedSelectionRect(before, handle, pointer, target, m_frozenFrame.size()));
     if (handle == SelectionDrag::Move) {
         target = pointer + m_selection.topLeft() - before.topLeft();
     } else {
@@ -115,6 +120,9 @@ void ShotWindow::beginSelection(QPointF imagePoint)
     }
     if (m_propertyFontPanel) {
         m_propertyFontPanel->hide();
+    }
+    if (m_selectionSizePanel) {
+        m_selectionSizePanel->hide();
     }
     setFullscreenActionButtonsVisible(false);
     // 3. 【截图】【选区创建】清理标注和撤销记录

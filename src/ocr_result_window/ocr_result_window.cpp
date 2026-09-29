@@ -20,7 +20,10 @@
 
 namespace markshot::shot {
 
-OcrResultWindow::OcrResultWindow(QString text, QScreen *targetScreen, QImage sourceImage)
+OcrResultWindow::OcrResultWindow(QString text,
+                                 QScreen *targetScreen,
+                                 QImage sourceImage,
+                                 QVector<markshot::ocr::Token> tokens)
     : m_config(pinnedWindowConfig())
     , m_alwaysOnTop(ocrResultWindowAlwaysOnTopFromRoot(markshot::readAppConfigRoot()))
 {
@@ -33,7 +36,7 @@ OcrResultWindow::OcrResultWindow(QString text, QScreen *targetScreen, QImage sou
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
     setObjectName(QStringLiteral("ocrResultWindow"));
-    initializeUi(text, std::move(sourceImage));
+    initializeUi(text, std::move(sourceImage), tokens);
     applyTheme();
 
     // 2. 【OCR】【结果窗口放置】保留截图目标屏幕，限制初始尺寸并记录浮层几何

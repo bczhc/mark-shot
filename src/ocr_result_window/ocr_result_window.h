@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ocr_result.h"
 #include "shot_window_internal.h"
 
 #include <QImage>
@@ -21,6 +22,10 @@ class ProviderTask;
 struct TaskResult;
 }
 
+namespace markshot::ocr_table {
+class OcrTablePane;
+}
+
 namespace markshot::shot {
 
 class OcrTextPane;
@@ -32,7 +37,11 @@ public:
     /// @param text 初始识别原文
     /// @param targetScreen 截图所在屏幕，缺失时回退到主屏幕
     /// @param sourceImage 本次识别使用的原图，缺失时隐藏预览入口
-    explicit OcrResultWindow(QString text, QScreen *targetScreen = nullptr, QImage sourceImage = {});
+    /// @param tokens 带位置的识别文字块，能组成表格时显示表格页
+    explicit OcrResultWindow(QString text,
+                             QScreen *targetScreen = nullptr,
+                             QImage sourceImage = {},
+                             QVector<markshot::ocr::Token> tokens = {});
 
     /// @brief 取消正在运行的翻译任务并释放临时文件
     ~OcrResultWindow() override;
@@ -81,17 +90,19 @@ private:
     /// @param text 初始识别文本
     /// @param sourceImage 原始截图
     /// @return 无返回值
-    void initializeUi(const QString &text, QImage sourceImage);
+    /// @param tokens 带位置的识别文字块
+    void initializeUi(const QString &text, QImage sourceImage, const QVector<markshot::ocr::Token> &tokens);
     /// @brief 创建互斥的文本与原图页面，文本页面保留原文和译文编辑器
     /// @param text 初始识别文本
     /// @param sourceImage 原始截图
     /// @return 承载页面的堆叠控件
-    QWidget *createContentViews(const QString &text, QImage sourceImage);
+    /// @param tokens 带位置的识别文字块，能组成表格时追加表格页
+    QWidget *createContentViews(const QString &text, QImage sourceImage, const QVector<markshot::ocr::Token> &tokens);
     /// @brief 创建位于编辑区域上方的目标语言与翻译操作栏
     /// @return 翻译操作栏控件
     QWidget *createTranslationActions();
     /// @brief 切换文本或原图页面并保留编辑焦点、分栏和滚动位置
-    /// @param index 页面下标，0 为文本，1 为原图
+    /// @param index 页面下标，0 为文本，其余依次为表格与原图
     /// @return 无返回值
     void setContentView(int index);
     /// @brief 应用当前明暗主题并更新图标配色
@@ -201,6 +212,7 @@ private:
     QList<int> m_textPaneSizes;
     OcrTextPane *m_sourcePane = nullptr;
     OcrTextPane *m_translationPane = nullptr;
+    markshot::ocr_table::OcrTablePane *m_tablePane = nullptr;
     QPushButton *m_translateButton = nullptr;
     QComboBox *m_targetLanguageCombo = nullptr;
     QPushButton *m_pinButton = nullptr;

@@ -155,6 +155,40 @@ void ShotWindow::setSelectedRectangleStyle(RectangleStyle style)
     persistAnnotationState();
 }
 
+void ShotWindow::setSelectedMosaicStyle(MosaicStyle style)
+{
+    // 1. 选中马赛克标注时批量切换滤镜，并先写入撤销快照
+    const QVector<int> selectedIds = selectedAnnotationIds();
+    if (!selectedIds.isEmpty()) {
+        const bool changed = std::any_of(selectedIds.begin(), selectedIds.end(), [this, style](int id) {
+            const Annotation *annotation = annotationById(id);
+            return annotation && annotation->tool == Tool::Mosaic && annotation->mosaicStyle != style;
+        });
+        if (!changed) {
+            return;
+        }
+        pushHistorySnapshot();
+        for (int id : selectedIds) {
+            if (Annotation *annotation = annotationById(id); annotation && annotation->tool == Tool::Mosaic) {
+                annotation->mosaicStyle = style;
+            }
+        }
+    } else {
+        // 2. 未选中标注时只更新工具默认值
+        if (m_tool != Tool::Mosaic || m_mosaicStyle == style) {
+            return;
+        }
+        m_mosaicStyle = style;
+    }
+
+    if (m_draft.has_value() && m_draft->tool == Tool::Mosaic) {
+        m_draft->mosaicStyle = style;
+    }
+    updateAnnotationPropertyPanel();
+    update();
+    persistAnnotationState();
+}
+
 void ShotWindow::setSelectedMarkerShape(MarkerShape shape)
 {
     // 1. 选中已有形状标记时批量改形状

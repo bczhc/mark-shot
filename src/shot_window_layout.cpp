@@ -465,21 +465,19 @@ void ShotWindow::updateAnnotationPropertyPanel()
         m_propertyFillButton->setChecked(panelFilled);
         m_propertyFillButton->setIcon(markshot::ui::makeFillIcon(panelFilled));
     }
+    // 圆角对描边与聚光灯两种矩形风格生效
+    const bool supportsRadius = !groupSelection
+        && panelTool == Tool::Rectangle
+        && (panelRectangleStyle == RectangleStyle::Stroke || panelRectangleStyle == RectangleStyle::Spotlight);
     if (m_propertyRadiusGlyphLabel) {
-        m_propertyRadiusGlyphLabel->setVisible(!groupSelection
-                                               && panelTool == Tool::Rectangle
-                                               && panelRectangleStyle == RectangleStyle::Stroke);
+        m_propertyRadiusGlyphLabel->setVisible(supportsRadius);
     }
     if (m_propertyRadiusLabel) {
-        m_propertyRadiusLabel->setVisible(!groupSelection
-                                          && panelTool == Tool::Rectangle
-                                          && panelRectangleStyle == RectangleStyle::Stroke);
+        m_propertyRadiusLabel->setVisible(supportsRadius);
         m_propertyRadiusLabel->setText(QString::number(qRound(panelRadius)));
     }
     if (m_propertyRadiusSlider) {
-        m_propertyRadiusSlider->setVisible(!groupSelection
-                                           && panelTool == Tool::Rectangle
-                                           && panelRectangleStyle == RectangleStyle::Stroke);
+        m_propertyRadiusSlider->setVisible(supportsRadius);
         const QSignalBlocker blocker(m_propertyRadiusSlider);
         m_propertyRadiusSlider->setValue(qRound(panelRadius));
     }
@@ -495,6 +493,17 @@ void ShotWindow::updateAnnotationPropertyPanel()
                     break;
                 }
             }
+        }
+    }
+    if (m_propertyMosaicStyleCombo) {
+        const bool supportsMosaicStyle = !groupSelection && panelTool == Tool::Mosaic;
+        m_propertyMosaicStyleCombo->setVisible(supportsMosaicStyle);
+        if (supportsMosaicStyle) {
+            const MosaicStyle panelMosaicStyle =
+                annotation && annotation->tool == Tool::Mosaic ? annotation->mosaicStyle : m_mosaicStyle;
+            const QSignalBlocker blocker(m_propertyMosaicStyleCombo);
+            m_propertyMosaicStyleCombo->setCurrentIndex(
+                std::max(0, m_propertyMosaicStyleCombo->findData(static_cast<int>(panelMosaicStyle))));
         }
     }
     if (m_propertyArrowStyleCombo) {

@@ -147,6 +147,7 @@ public:
     using HighlighterStyle = markshot::shot::types::HighlighterStyle;
     using MagnifierShape = markshot::shot::types::MagnifierShape;
     using RectangleStyle = markshot::shot::types::RectangleStyle;
+    using MosaicStyle = markshot::shot::types::MosaicStyle;
     using MarkerShape = markshot::shot::types::MarkerShape;
     using NumberStyle = markshot::shot::types::NumberStyle;
 
@@ -162,6 +163,10 @@ private:
     void initializeImageScrollBars();
     void initializeActionToolbar();
     void initializePropertyFontPanel();
+    /// @brief 创建属性面板中矩形、马赛克、箭头、荧光笔与序号的样式下拉框
+    /// @param propertyLayout 属性面板布局
+    /// @return 无返回值
+    void initializePropertyStyleCombos(QHBoxLayout *propertyLayout);
     void initializeShortcuts();
     void initializeTransientPanels();
     /// @brief 创建内联文字编辑器并配置输入、样式与事件处理
@@ -285,7 +290,19 @@ private:
                    const QVector<QPointF> &points,
                    qreal width,
                    ArrowStyle style) const;
-    void drawMosaic(QPainter &painter, QRectF imageRect, qreal blockSize, bool widgetCoordinates) const;
+    void drawMosaic(QPainter &painter, const Annotation &annotation, bool widgetCoordinates) const;
+    /// @brief 按滤镜效果处理冻结帧中的一块区域
+    /// @param sourceRect 图像坐标中的区域
+    /// @param style 滤镜效果
+    /// @param strength 工具强度，与马赛克块大小共用
+    /// @return 处理后的区域图像，区域无效时返回空图
+    QImage filteredRegion(QRect sourceRect, MosaicStyle style, qreal strength) const;
+    /// @brief 统一绘制所有聚光灯矩形的压暗遮罩
+    /// @param painter 绘制器
+    /// @param area 需要压暗的范围，坐标与 widgetCoordinates 一致
+    /// @param widgetCoordinates true 表示窗口坐标，false 表示图像坐标
+    /// @return 无返回值
+    void drawSpotlightOverlay(QPainter &painter, QRectF area, bool widgetCoordinates) const;
     void drawRectangle(QPainter &painter, const Annotation &annotation, bool widgetCoordinates) const;
     void drawMarker(QPainter &painter, const Annotation &annotation, bool widgetCoordinates) const;
     void drawMagnifier(QPainter &painter, const Annotation &annotation, bool widgetCoordinates) const;
@@ -383,6 +400,36 @@ private:
     void setSelectedAnnotationCornerRadius(int radius);
     void setSelectedAnnotationArrowStyle(ArrowStyle style);
     void setSelectedRectangleStyle(RectangleStyle style);
+    /// @brief 切换选中马赛克标注或马赛克工具默认的滤镜效果
+    /// @param style 滤镜效果
+    /// @return 无返回值
+    void setSelectedMosaicStyle(MosaicStyle style);
+    /// @brief 计算拖出新选区时的矩形，锁定比例或按住 Shift 时保持比例
+    /// @param anchor 拖动起点（图像坐标）
+    /// @param pointer 当前指针（图像坐标）
+    /// @param squareModifier 是否按住 Shift，未锁定比例时强制正方形
+    /// @return 新选区
+    QRectF creationSelectionRect(QPointF anchor, QPointF pointer, bool squareModifier) const;
+    /// @brief 对手柄调整后的选区套用锁定比例
+    /// @param before 调整前选区
+    /// @param handle 拖动的边、角或整个选区
+    /// @param adjusted 未约束的调整结果
+    /// @return 满足锁定比例的选区；未锁定时原样返回
+    QRectF aspectLockedSelection(QRectF before, SelectionDrag handle, QRectF adjusted) const;
+    /// @brief 打开或关闭选区尺寸面板
+    /// @return 无返回值
+    void toggleSelectionSizePanel();
+    /// @brief 把尺寸面板放到选区下方，空间不足时放到选区内
+    /// @return 无返回值
+    void updateSelectionSizePanelGeometry();
+    /// @brief 切换选区锁定比例，并立即按新比例调整已有选区
+    /// @param ratio 宽高比，0 表示自由比例
+    /// @return 无返回值
+    void setSelectionAspectRatio(qreal ratio);
+    /// @brief 把选区设为精确尺寸
+    /// @param size 目标尺寸（图像像素）
+    /// @return 无返回值
+    void applySelectionSize(QSize size);
     void setSelectedMarkerShape(MarkerShape shape);
     // 设置形状标记的填充模式：filled 为 false 时以描边（空心）绘制。
     void setSelectedMarkerFill(bool filled);
@@ -578,6 +625,10 @@ private:
     std::array<bool, static_cast<int>(Tool::Marker) + 1> m_autoSelectAfterDrawByTool = {};
     qreal m_rectangleCornerRadius = 0.0;
     RectangleStyle m_rectangleStyle = RectangleStyle::Stroke;
+    MosaicStyle m_mosaicStyle = MosaicStyle::Pixelate;
+    // 选区锁定比例（宽 / 高），0 表示自由比例，仅在本次截图会话内有效
+    qreal m_selectionAspectRatio = 0.0;
+    QWidget *m_selectionSizePanel = nullptr;
     MarkerShape m_markerShape = MarkerShape::Triangle;
     // 形状标记默认填充；false 时新标记以描边（空心）绘制。
     bool m_markerFilled = true;
@@ -621,6 +672,7 @@ private:
     QComboBox *m_propertyHighlighterStyleCombo = nullptr;
     QComboBox *m_propertyNumberStyleCombo = nullptr;
     QComboBox *m_propertyRectangleStyleCombo = nullptr;
+    QComboBox *m_propertyMosaicStyleCombo = nullptr;
     QPushButton *m_propertyResetNumberButton = nullptr;
     QLabel *m_propertyMagnifierScaleGlyphLabel = nullptr;
     QLabel *m_propertyMagnifierScaleLabel = nullptr;

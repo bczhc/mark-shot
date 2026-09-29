@@ -2,6 +2,7 @@
 
 #include "notifications/app_notifications.h"
 #include "recording/recording_controller.h"
+#include "recording/recording_display_source.h"
 
 namespace markshot::recording {
 
@@ -27,6 +28,22 @@ bool RecordingSessionManager::start(const RecordingOptions &options, QObject *pa
         }
         return false;
     }
+    // 门户 SelectSources 在嵌套事件循环里阻塞。先占住启动权，
+    // 避免这段等待里再次 start() 又弹出一个选择窗口。
+    if (!m_startGate.tryEnter(error)) {
+        return false;
+    }
+    struct StartGateLeave {
+        RecordingStartGate *gate;
+        ~StartGateLeave()
+        {
+            gate->leave();
+        }
+    };
+    [[maybe_unused]] StartGateLeave leaveGate{&m_startGate};
+
+    RecordingOptions resolved = options;
+    bindRegionRecordingDisplay(&resolved);
 
     auto *controller = new RecordingController(parent ? parent : this);
     connect(controller, &RecordingController::statusChanged, this, &RecordingSessionManager::statusChanged);
@@ -45,14 +62,18 @@ bool RecordingSessionManager::start(const RecordingOptions &options, QObject *pa
                 }
                 emit recordingFinished(ok, outputPath, message);
             });
-    if (!controller->start(options, error)) {
+    if (!controller->start(resolved, error)) {
         controller->deleteLater();
+        return false;
+    }
+    // 采集在 start() 内部同步失败时会走 finished，此时不能再把会话接上
+    if (!controller->status().active) {
         return false;
     }
 
     m_controller = controller;
     emit statusChanged();
-    markshot::notifications::notifyRecordingStarted(options);
+    markshot::notifications::notifyRecordingStarted(resolved);
     return true;
 }
 

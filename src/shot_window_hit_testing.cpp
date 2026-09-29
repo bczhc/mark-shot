@@ -7,6 +7,7 @@ using namespace markshot::shot;
 bool ShotWindow::propertyComboPopupVisible() const
 {
     return (m_propertyRectangleStyleCombo && m_propertyRectangleStyleCombo->view()->isVisible())
+        || (m_propertyMosaicStyleCombo && m_propertyMosaicStyleCombo->view()->isVisible())
         || (m_propertyArrowStyleCombo && m_propertyArrowStyleCombo->view()->isVisible())
         || (m_propertyHighlighterStyleCombo && m_propertyHighlighterStyleCombo->view()->isVisible())
         || (m_propertyNumberStyleCombo && m_propertyNumberStyleCombo->view()->isVisible());

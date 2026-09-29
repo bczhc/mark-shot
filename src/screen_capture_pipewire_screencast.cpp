@@ -1,5 +1,7 @@
 #include "screen_capture_pipewire_screencast.h"
 
+#include "screen_capture_portal_guard.h"
+
 #include "pipewire/pipewire_dmabuf_importer.h"
 #include "screen_capture_pipewire_libportal.h"
 
@@ -276,6 +278,21 @@ void PortalPipeWireScreencast::stop()
 
 bool PortalPipeWireScreencast::start(bool includeCursor, QString *error)
 {
+    QString busyError;
+    if (!markshot::tryAcquireInteractiveScreenCast(&busyError)) {
+        if (error) {
+            *error = busyError;
+        }
+        return false;
+    }
+    struct ScreenCastRelease {
+        ~ScreenCastRelease()
+        {
+            markshot::releaseInteractiveScreenCast();
+        }
+    };
+    [[maybe_unused]] ScreenCastRelease releaseGuard;
+
 #ifdef HAVE_LIBPORTAL
     QString libportalError;
     if (startWithLibportal(includeCursor, &libportalError)) {

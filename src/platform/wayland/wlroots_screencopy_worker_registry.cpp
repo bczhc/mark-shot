@@ -197,8 +197,9 @@ void WlrootsScreencopyWorker::handleOutputDescription(void *data,
  */
 WlrootsOutput *WlrootsScreencopyWorker::chooseOutput() const
 {
-    // 1. 【录制】【wlroots采集】优先匹配配置中明确指定的输出名称
-    if (!m_options.display.outputName.isEmpty()) {
+    // 1. 【录制】【wlroots采集】优先匹配配置中明确指定的输出名称。
+    // 「全部显示器」不是真实输出名，区域录制改由几何中心定位。
+    if (!m_options.display.allOutputs && !m_options.display.outputName.isEmpty()) {
         for (const std::unique_ptr<WlrootsOutput> &output : m_outputs) {
             if (output->name == m_options.display.outputName) {
                 return output.get();

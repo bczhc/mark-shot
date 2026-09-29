@@ -23,7 +23,9 @@
 
 namespace markshot::shot {
 
-void OcrResultWindow::initializeUi(const QString &text, QImage sourceImage)
+void OcrResultWindow::initializeUi(const QString &text,
+                                   QImage sourceImage,
+                                   const QVector<markshot::ocr::Token> &tokens)
 {
     setFont(markshot::theme::uiFont(10));
     auto *layout = new QVBoxLayout(this);
@@ -49,9 +51,6 @@ void OcrResultWindow::initializeUi(const QString &text, QImage sourceImage)
     m_viewTabs->setDrawBase(false);
     m_viewTabs->setFocusPolicy(Qt::StrongFocus);
     m_viewTabs->addTab(MS_TR("Text"));
-    if (!sourceImage.isNull()) {
-        m_viewTabs->addTab(MS_TR("Source image"));
-    }
     titleLayout->addWidget(m_viewTabs);
     titleLayout->addStretch(1);
     m_translationToggle = new QPushButton(MS_TR("Translate"), m_titleBar);
@@ -97,7 +96,15 @@ void OcrResultWindow::initializeUi(const QString &text, QImage sourceImage)
 
     // 2. 【OCR】【内容页面】翻译操作位于内容上方，原图与文本使用互斥页面
     layout->addWidget(createTranslationActions());
-    layout->addWidget(createContentViews(text, std::move(sourceImage)), 1);
+    const bool hasSourceImage = !sourceImage.isNull();
+    layout->addWidget(createContentViews(text, std::move(sourceImage), tokens), 1);
+    // 标签顺序与页面堆叠顺序一致：文本、表格（可选）、原图（可选）
+    if (m_tablePane) {
+        m_viewTabs->addTab(MS_TR("Table"));
+    }
+    if (hasSourceImage) {
+        m_viewTabs->addTab(MS_TR("Source image"));
+    }
     connect(m_viewTabs, &QTabBar::currentChanged, this, &OcrResultWindow::setContentView);
     connect(m_translationToggle, &QPushButton::toggled, this, &OcrResultWindow::toggleTranslationPane);
 

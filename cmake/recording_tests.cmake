@@ -1,3 +1,21 @@
+qt_add_executable(mark-shot-recording-portal-reentry-test
+    tests/recording_portal_reentry_test.cpp
+    src/recording/recording_display_source.h
+    src/recording/recording_options.h
+    src/recording/recording_start_gate.cpp
+    src/recording/recording_start_gate.h
+    src/screen_capture_portal_guard.cpp
+    src/screen_capture_portal_guard.h
+)
+target_include_directories(mark-shot-recording-portal-reentry-test PRIVATE src)
+target_link_libraries(mark-shot-recording-portal-reentry-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME recording-portal-reentry COMMAND mark-shot-recording-portal-reentry-test)
+
 qt_add_executable(mark-shot-recording-capture-backend-test
     tests/recording_capture_backend_test.cpp
     src/recording/recording_capture_backend.cpp
@@ -29,6 +47,21 @@ target_link_libraries(mark-shot-recording-frame-grabber-test
         Qt6::Test
 )
 add_test(NAME recording-frame-grabber COMMAND mark-shot-recording-frame-grabber-test)
+
+qt_add_executable(mark-shot-recording-polling-capture-stream-test
+    tests/recording_polling_capture_stream_test.cpp
+    src/recording/recording_capture_stream.h
+    src/recording/recording_polling_capture_stream.cpp
+    src/recording/recording_polling_capture_stream.h
+)
+target_include_directories(mark-shot-recording-polling-capture-stream-test PRIVATE src)
+target_link_libraries(mark-shot-recording-polling-capture-stream-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME recording-polling-capture-stream COMMAND mark-shot-recording-polling-capture-stream-test)
 
 qt_add_executable(mark-shot-recording-video-encoder-options-test
     tests/recording_video_encoder_options_test.cpp

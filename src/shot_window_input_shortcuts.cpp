@@ -161,6 +161,14 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    // 【截图】【选区尺寸】Ctrl+R 输入精确宽高或锁定比例
+    if (event->key() == Qt::Key_R && event->modifiers() == Qt::ControlModifier && !m_dragging
+        && m_mode == Mode::Editing && !m_fullscreenAnnotation) {
+        toggleSelectionSizePanel();
+        event->accept();
+        return;
+    }
+
     if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier && !m_dragging) {
         markshot::history::showHistoryWindow();
         close();
@@ -292,7 +300,7 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
                 const QRectF previousSelection = normalizedSelection();
                 const bool previousSelectionUsable = previousSelection.width() >= kMinSelectionSize
                     && previousSelection.height() >= kMinSelectionSize;
-                m_selection = normalizedRect(m_selectionStart, m_startupHoverImagePoint);
+                m_selection = creationSelectionRect(m_selectionStart, m_startupHoverImagePoint, false);
                 revealSelectionInfo();
                 scheduleInitialSelectionRepaint(
                     initialSelectionDirtyRegion(previousSelection, previousSelectionUsable) | dirty);

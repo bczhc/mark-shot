@@ -24,6 +24,7 @@ struct AnnotationState {
     // 默认文本字号为 20pt，渲染字号等于 19 加 width
     qreal textSize = 1.0;
     qreal mosaicBlockSize = 14.0;
+    ShotWindow::MosaicStyle mosaicStyle = ShotWindow::MosaicStyle::Pixelate;
 
     // 矩形相关
     bool shapeFilled = false;

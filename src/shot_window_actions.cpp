@@ -259,7 +259,7 @@ void ShotWindow::ocrCopySelection()
     const QString result = markshot::ocr::tokensText(parsedOcr.tokens);
 
     if (showResultPanel) {
-        auto *window = createOcrResultWindow(result, targetScreen.data(), std::move(sourceImage));
+        auto *window = createOcrResultWindow(result, targetScreen.data(), std::move(sourceImage), parsedOcr.tokens);
         window->show();
         window->raise();
         window->activateWindow();
@@ -302,6 +302,7 @@ QImage ShotWindow::renderedSelection() const
     QPainter painter(&output);
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.translate(-selectionRect.topLeft());
+    drawSpotlightOverlay(painter, QRectF(selectionRect), false);
     for (const Annotation &annotation : m_annotations) {
         drawAnnotation(painter, annotation, false);
     }

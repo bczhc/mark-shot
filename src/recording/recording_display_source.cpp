@@ -72,4 +72,25 @@ QVector<DisplaySource> availableDisplaySources()
     return sources;
 }
 
+void bindRegionRecordingDisplay(RecordingOptions *options)
+{
+    if (!options) {
+        return;
+    }
+
+    QVector<RecordingScreenCandidate> screens;
+    const QList<QScreen *> available = QGuiApplication::screens();
+    screens.reserve(available.size());
+    for (QScreen *screen : available) {
+        if (!screen || screen->name().isEmpty() || screen->geometry().isEmpty()) {
+            continue;
+        }
+        RecordingScreenCandidate candidate;
+        candidate.name = screen->name();
+        candidate.geometry = screen->geometry();
+        screens.append(candidate);
+    }
+    bindRegionRecordingDisplay(options, screens);
+}
+
 }  // namespace markshot::recording

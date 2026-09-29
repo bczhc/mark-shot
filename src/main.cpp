@@ -6,8 +6,11 @@
 #include "capture_session_launcher.h"
 #include "cli/headless_capture.h"
 #include "cli/image_pin_launch.h"
+#include "capture_delay/capture_delay_option.h"
+#include "capture_delay/capture_delay_scheduler.h"
 #include "cli/recording_cli.h"
 #include "debug_log.h"
+#include "screen_capture_portal_guard.h"
 #include "ipc/single_instance_ipc.h"
 #include "recording/recording_session_manager.h"
 #include "recording/ui/recording_overlay_service.h"
@@ -32,6 +35,7 @@
 #include <QPointer>
 #include <QScreen>
 #include <QStringList>
+#include <QThread>
 #include <QTimer>
 #include <QVector>
 
@@ -116,6 +120,9 @@ int main(int argc, char *argv[])
     QCommandLineOption defaultColorOption(QStringLiteral("default-color"),
                                           QStringLiteral("Set the default annotation color. Supported formats: #RRGGBB or #RRGGBBAA."),
                                           QStringLiteral("color"));
+    QCommandLineOption delayOption(QStringLiteral("delay"),
+                                   QStringLiteral("Wait the given number of seconds (0-60, decimals allowed) before capturing."),
+                                   QStringLiteral("seconds"));
     QCommandLineOption historyOption(QStringLiteral("history"),
                                      QStringLiteral("Open screenshot history without taking a screenshot."));
     QCommandLineOption debugOption(QStringLiteral("debug"),
@@ -142,6 +149,7 @@ int main(int argc, char *argv[])
     parser.addOption(noDebugOption);
     parser.addOption(debugLogOption);
     parser.addOption(historyOption);
+    parser.addOption(delayOption);
     markshot::cli::addHeadlessCaptureOptions(&parser);
     parser.process(app);
 
@@ -152,9 +160,24 @@ int main(int argc, char *argv[])
             || parser.isSet(allOutputsOption) || parser.isSet(fullscreenAnnotationOption)
             || parser.isSet(stopRecordingOption) || parser.isSet(pauseRecordingOption)
             || parser.isSet(recordingStatusOption) || parser.isSet(QStringLiteral("capture-to"))
-            || parser.isSet(QStringLiteral("list-displays"))) {
+            || parser.isSet(QStringLiteral("list-displays")) || parser.isSet(delayOption)) {
             parser.showHelp(1);
         }
+    }
+
+    // 2. 【应用】【延时截图】先校验延时参数，错误时直接退出，避免进入截图流程后才报错
+    int captureDelayMs = 0;
+    if (parser.isSet(delayOption)) {
+        QString delayError;
+        const std::optional<int> parsedDelay =
+            markshot::capture_delay::parseCaptureDelaySeconds(parser.value(delayOption), &delayError);
+        if (!parsedDelay.has_value()) {
+            QMessageBox::critical(nullptr,
+                                  QStringLiteral("Mark Shot"),
+                                  MS_TR("Invalid --delay value: %1").arg(delayError));
+            return 1;
+        }
+        captureDelayMs = *parsedDelay;
     }
 
     if (parser.isSet(stopRecordingOption)) {
@@ -207,6 +230,10 @@ int main(int argc, char *argv[])
     if (parser.isSet(historyOption)) {
         markshot::history::showHistoryWindow();
         return QApplication::exec();
+    }
+    // 【应用】【延时截图】无界面截图没有事件循环，直接阻塞等待后再截图
+    if (captureDelayMs > 0 && parser.isSet(QStringLiteral("capture-to"))) {
+        QThread::msleep(static_cast<unsigned long>(captureDelayMs));
     }
     const int headlessExitCode = markshot::cli::runHeadlessCaptureIfRequested(parser);
     if (headlessExitCode >= 0) {
@@ -340,18 +367,20 @@ int main(int argc, char *argv[])
     const bool useRegularWindow = parser.isSet(xdgWindowOption);
     const bool fullscreenAnnotation = parser.isSet(fullscreenAnnotationOption);
     const markshot::WindowsTrayController::Config trayConfig = markshot::WindowsTrayController::readConfig();
-    const bool explicitCaptureRequest =
-        parser.isSet(captureOption) || parser.isSet(allOutputsOption) || parser.isSet(fullscreenAnnotationOption);
+    const bool explicitCaptureRequest = parser.isSet(captureOption) || parser.isSet(allOutputsOption)
+        || parser.isSet(fullscreenAnnotationOption) || parser.isSet(delayOption);
     const bool trayMode = !explicitCaptureRequest && (parser.isSet(trayOption) || trayConfig.autoStart);
 
     const bool explicitTrayOnly = parser.isSet(trayOption)
         && !parser.isSet(captureOption)
         && !parser.isSet(allOutputsOption)
-        && !parser.isSet(fullscreenAnnotationOption);
+        && !parser.isSet(fullscreenAnnotationOption)
+        && !parser.isSet(delayOption);
     markshot::ipc::SingleInstanceCommand duplicateCommand;
     duplicateCommand.capture = !explicitTrayOnly;
     duplicateCommand.fullscreen = fullscreenAnnotation;
     duplicateCommand.allOutputs = allOutputs;
+    duplicateCommand.captureDelayMs = captureDelayMs;
     if (markshot::ipc::sendSingleInstanceCommand(duplicateCommand, nullptr, nullptr)) {
         return 0;
     }
@@ -379,6 +408,13 @@ int main(int argc, char *argv[])
                                         bool requestAllOutputs,
                                         std::optional<markshot::recording::RecordingOptions> regionRecordingOptions = std::nullopt) -> bool {
         if (captureActive) {
+            return true;
+        }
+        // 门户选择弹窗使用嵌套事件循环，热键会在弹窗还在时再次进来。
+        // 这时再开截图会话会叠出第二个 SelectSources 窗口。
+        if (markshot::interactiveScreenCastInProgress()) {
+            markshot::debugLog("capture-session",
+                               "【截图会话】跳过：ScreenCast 门户选择尚未结束");
             return true;
         }
 
@@ -423,13 +459,28 @@ int main(int argc, char *argv[])
         return true;
     };
 
+    // 【应用】【延时截图】整个进程共用一个调度器，托盘、IPC 与命令行的延时请求互相替换
+    markshot::capture_delay::CaptureDelayScheduler delayScheduler(&app);
+    auto requestCapture = [launchCapture, &delayScheduler](bool startFullscreen,
+                                                           bool requestAllOutputs,
+                                                           int delayMs) {
+        if (delayMs <= 0) {
+            delayScheduler.cancel();
+            return launchCapture(startFullscreen, requestAllOutputs);
+        }
+        delayScheduler.schedule(delayMs, [launchCapture, startFullscreen, requestAllOutputs] {
+            launchCapture(startFullscreen, requestAllOutputs);
+        });
+        return true;
+    };
+
     auto &recordingManager = markshot::recording::RecordingSessionManager::instance();
     // 录制期间的悬浮控制条与区域边框跟随会话状态自动出现和消失
     markshot::recording::ui::RecordingOverlayService::instance().attach();
     markshot::ipc::installSingleInstanceCommandHandler(
         singleInstanceServer.get(),
         &app,
-        [&app, launchCapture, &recordingManager](const markshot::ipc::SingleInstanceCommand &command) {
+        [&app, requestCapture, &recordingManager](const markshot::ipc::SingleInstanceCommand &command) {
             markshot::ipc::SingleInstanceResponse response;
             response.handled = true;
 
@@ -466,10 +517,12 @@ int main(int argc, char *argv[])
             }
 
             if (command.capture) {
-                QTimer::singleShot(0, &app, [launchCapture, command] {
-                    launchCapture(command.fullscreen, command.allOutputs);
+                QTimer::singleShot(0, &app, [requestCapture, command] {
+                    requestCapture(command.fullscreen, command.allOutputs, command.captureDelayMs);
                 });
-                response.message = QStringLiteral("capture requested");
+                response.message = command.captureDelayMs > 0
+                    ? QStringLiteral("capture scheduled in %1 ms").arg(command.captureDelayMs)
+                    : QStringLiteral("capture requested");
             } else {
                 response.message = QStringLiteral("running");
             }
@@ -481,6 +534,13 @@ int main(int argc, char *argv[])
         auto *trayController = new markshot::WindowsTrayController(&app, trayConfig, &app);
         trayController->setCaptureCallbacks([launchCapture, allOutputs] { launchCapture(false, allOutputs); },
                                             [launchCapture, allOutputs] { launchCapture(true, allOutputs); });
+        markshot::capture_delay::DelayedCaptureMenuCallbacks delayedCallbacks;
+        delayedCallbacks.schedule = [requestCapture, allOutputs](int delayMs) {
+            requestCapture(false, allOutputs, delayMs);
+        };
+        delayedCallbacks.cancel = [&delayScheduler] { delayScheduler.cancel(); };
+        delayedCallbacks.pending = [&delayScheduler] { return delayScheduler.pending(); };
+        trayController->setDelayedCaptureCallbacks(std::move(delayedCallbacks));
         trayController->setRecordingRegionCallback([launchCapture, allOutputs](markshot::recording::RecordingOptions options) {
             launchCapture(false, allOutputs, std::move(options));
         });
@@ -491,6 +551,17 @@ int main(int argc, char *argv[])
         return QApplication::exec();
     }
 
+    if (captureDelayMs > 0) {
+        // 延时期间还没有截图窗口，禁止因无窗口而提前退出
+        app.setQuitOnLastWindowClosed(false);
+        delayScheduler.schedule(captureDelayMs, [&app, launchCapture, fullscreenAnnotation, allOutputs] {
+            app.setQuitOnLastWindowClosed(true);
+            if (!launchCapture(fullscreenAnnotation, allOutputs)) {
+                app.exit(1);
+            }
+        });
+        return QApplication::exec();
+    }
     if (!launchCapture(fullscreenAnnotation, allOutputs)) {
         return 1;
     }

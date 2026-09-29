@@ -154,7 +154,7 @@ void ShotWindow::drawAnnotation(QPainter &painter, const Annotation &annotation,
         break;
     case Tool::Mosaic:
         painter.setOpacity(annotation.color.alphaF());
-        drawMosaic(painter, annotation.rect, annotation.width, widgetCoordinates);
+        drawMosaic(painter, annotation, widgetCoordinates);
         break;
     case Tool::Magnifier:
         drawMagnifier(painter, annotation, widgetCoordinates);
@@ -210,6 +210,18 @@ void ShotWindow::drawRectangle(QPainter &painter, const Annotation &annotation, 
         painter.setPen(Qt::NoPen);
         painter.setBrush(highlightColor);
         painter.drawPath(shapePath);
+        break;
+    }
+    case RectangleStyle::Spotlight: {
+        // 1. 压暗效果由 drawSpotlightOverlay 统一绘制，这里只在编辑界面画虚线提示范围
+        // 2. 导出时不画任何边框，保留区域与原图完全一致
+        if (widgetCoordinates) {
+            QPen hintPen(QColor(255, 255, 255, 150), 1.0, Qt::DashLine);
+            hintPen.setCosmetic(true);
+            painter.setPen(hintPen);
+            painter.setBrush(Qt::NoBrush);
+            painter.drawPath(shapePath);
+        }
         break;
     }
     case RectangleStyle::Invert: {
@@ -432,24 +444,6 @@ void ShotWindow::drawNumber(QPainter &painter,
     painter.setFont(font);
     painter.setPen(Qt::white);
     painter.drawText(bubble, Qt::AlignCenter, label);
-    painter.restore();
-}
-
-void ShotWindow::drawMosaic(QPainter &painter, QRectF imageRect, qreal blockSize, bool widgetCoordinates) const
-{
-    QRect sourceRect = imageRect.normalized().toAlignedRect().intersected(QRect(QPoint(0, 0), m_frozenFrame.size()));
-    if (sourceRect.isEmpty()) {
-        return;
-    }
-
-    const QImage mosaic = mosaicImage(sourceRect, qRound(blockSize));
-    if (mosaic.isNull()) {
-        return;
-    }
-
-    painter.save();
-    painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
-    painter.drawImage(widgetCoordinates ? imageRectToWidget(sourceRect) : QRectF(sourceRect), mosaic);
     painter.restore();
 }
 
