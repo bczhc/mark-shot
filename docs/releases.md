@@ -1,5 +1,13 @@
 # Release Notes
 
+### 0.1.55
+
+- **Delayed Capture**: Pass `--delay <seconds>` to schedule captures after a pause (0–60s). Presets are also available in the tray menu.
+- **Selection Aspect Ratio & Exact Size**: Press `Ctrl+R` to open the size dialog and lock common ratios (1:1, 4:3, 16:9, etc.) or enter exact dimensions; hold `Shift` to constrain initial drags to squares.
+- **Spotlight & Filter Styles**: Added Spotlight mode to Rectangle annotations, and selectable filter modes (Pixelate, Blur, Grayscale, Invert, Brighten) to the Mosaic tool.
+- **OCR Table View**: Structured OCR text can be inspected and edited as a table, with TSV, Markdown, CSV, and HTML copy options.
+- **Recording Stability**: Fixed repeated ScreenCast permission dialogs and potential use-after-free crashes during Wayland recording teardown.
+
 ### 0.1.54
 
 - **Gemini and Claude Translation**: OCR translation adds Google Gemini and Anthropic Claude plugins. Enter credentials in Settings -> Integrations or through environment variables, and pick the service in Settings -> Plugins. Each plugin keeps its own config and does not inherit the OpenAI-compatible key, model, or system prompt. See the [translation provider guide](translation-providers.md).

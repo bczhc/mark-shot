@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.55 - 2026-09-30
+
+### Features & Enhancements
+
+- **Delayed Capture**: Added the `--delay <seconds>` CLI option (0–60s, decimals allowed) to wait before taking screenshots or headless captures, with automatic forwarding to running instances. The system tray menu now provides 3s, 5s, and 10s presets with cancel support.
+- **Selection Aspect Ratio Lock & Exact Sizing**: Supported Shift-drag square constraint during region selection. Pressing `Ctrl+R` opens the exact size panel with width/height inputs and presets for 1:1, 4:3, 3:2, 16:9, 21:9, 3:4, and 9:16 aspect ratio locks.
+- **Annotation Filter Styles & Spotlight**: Rectangle annotation now supports `Spotlight` mode which dims unselected areas. Mosaic tool now features selectable styles: `Pixelate`, `Blur`, `Grayscale`, `Invert`, and `Brighten`, with adjustable intensity via mouse wheel.
+- **OCR Table View & Structured Export**: When recognized OCR text aligns in rows and columns, a dedicated **Table** tab appears in the OCR result window. Cells can be edited inline and copied as Spreadsheet (TSV), Markdown, CSV, or HTML.
+
+### Bug Fixes
+
+- **Wayland ScreenCast SelectSources Prompts**: Resolved repeated user authorization prompts by properly handling pending state before nested event loops.
+- **Polling Capture Stream Life Cycle**: Prevented potential use-after-free conditions in the polling capture stream when capture sessions terminate during nested event processing.
+
 ## 0.1.54 - 2026-09-25
 
 ### Features & Enhancements

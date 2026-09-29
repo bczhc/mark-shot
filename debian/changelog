@@ -1,3 +1,13 @@
+mark-shot (0.1.55-0ppa1~resolute1) resolute; urgency=medium
+
+  * Add delayed capture CLI option and system tray presets.
+  * Support selection aspect ratio locks and exact size panel.
+  * Add Spotlight rectangle and selectable mosaic filter styles.
+  * Add editable OCR table view and multi-format export.
+  * Prevent repeated ScreenCast SelectSources prompts and stream UAF.
+
+ -- Mark Shot maintainers <snemc@qq.com>  Wed, 30 Sep 2026 00:00:00 +0000
+
 mark-shot (0.1.54-0ppa1~resolute1) resolute; urgency=medium
 
   * Add Google Gemini and Anthropic Claude translation provider plugins.
