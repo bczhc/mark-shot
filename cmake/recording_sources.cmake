@@ -83,6 +83,8 @@ set(MARK_SHOT_RECORDING_SOURCES
     src/recording/recording_windows_wgc_capture_stream.h
     src/recording/recording_session_manager.cpp
     src/recording/recording_session_manager.h
+    src/recording/recording_start_gate.cpp
+    src/recording/recording_start_gate.h
     src/recording/recording_start_flow.cpp
     src/recording/recording_start_flow.h
     src/recording/recording_status.cpp

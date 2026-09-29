@@ -8,6 +8,7 @@
 #include "cli/image_pin_launch.h"
 #include "cli/recording_cli.h"
 #include "debug_log.h"
+#include "screen_capture_portal_guard.h"
 #include "ipc/single_instance_ipc.h"
 #include "recording/recording_session_manager.h"
 #include "recording/ui/recording_overlay_service.h"
@@ -379,6 +380,13 @@ int main(int argc, char *argv[])
                                         bool requestAllOutputs,
                                         std::optional<markshot::recording::RecordingOptions> regionRecordingOptions = std::nullopt) -> bool {
         if (captureActive) {
+            return true;
+        }
+        // 门户选择弹窗使用嵌套事件循环，热键会在弹窗还在时再次进来。
+        // 这时再开截图会话会叠出第二个 SelectSources 窗口。
+        if (markshot::interactiveScreenCastInProgress()) {
+            markshot::debugLog("capture-session",
+                               "【截图会话】跳过：ScreenCast 门户选择尚未结束");
             return true;
         }
 

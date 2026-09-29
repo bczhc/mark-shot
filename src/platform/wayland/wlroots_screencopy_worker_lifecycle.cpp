@@ -29,7 +29,9 @@ bool WlrootsScreencopyWorker::start(QString *error)
     if (error) {
         error->clear();
     }
-    if (m_options.display.allOutputs) {
+    // 整屏「全部显示器」无法用单路 screencopy 覆盖虚拟桌面。
+    // 区域录制即使对话框选了全部显示器，也只捕获区域所在的那块输出。
+    if (m_options.display.allOutputs && m_options.scope == RecordingScope::Display) {
         if (error) {
             *error = QStringLiteral("wlroots screencopy does not support all-outputs recording");
         }
@@ -75,6 +77,18 @@ bool WlrootsScreencopyWorker::start(QString *error)
         cleanup();
         if (error) {
             *error = QStringLiteral("failed to select Wayland output for recording");
+        }
+        return false;
+    }
+    const QRect requestedRegion = m_options.captureGeometry.normalized();
+    if (m_options.display.allOutputs
+        && m_options.scope == RecordingScope::Region
+        && m_selectedOutput->geometry.isValid()
+        && !m_selectedOutput->geometry.isEmpty()
+        && !m_selectedOutput->geometry.contains(requestedRegion)) {
+        cleanup();
+        if (error) {
+            *error = QStringLiteral("wlroots screencopy region is not fully inside one output");
         }
         return false;
     }

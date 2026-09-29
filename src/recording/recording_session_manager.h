@@ -1,6 +1,7 @@
 #pragma once
 
 #include "recording/recording_options.h"
+#include "recording/recording_start_gate.h"
 #include "recording/recording_status.h"
 
 #include <QObject>
@@ -65,6 +66,7 @@ private:
     explicit RecordingSessionManager(QObject *parent = nullptr);
 
     QPointer<RecordingController> m_controller;
+    RecordingStartGate m_startGate;
 };
 
 }  // namespace markshot::recording

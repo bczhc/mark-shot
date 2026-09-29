@@ -184,6 +184,8 @@ qt_add_executable(mark-shot
     src/screen_capture_cursor.cpp
     src/screen_capture_cursor.h
     src/screen_capture_dbus_portal.cpp
+    src/screen_capture_portal_guard.cpp
+    src/screen_capture_portal_guard.h
     src/screen_capture_dbus_wayland.cpp
     src/screen_capture_internal.h
     ${MARK_SHOT_PIPEWIRE_CAPTURE_SOURCES}

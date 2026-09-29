@@ -1,3 +1,21 @@
+qt_add_executable(mark-shot-recording-portal-reentry-test
+    tests/recording_portal_reentry_test.cpp
+    src/recording/recording_display_source.h
+    src/recording/recording_options.h
+    src/recording/recording_start_gate.cpp
+    src/recording/recording_start_gate.h
+    src/screen_capture_portal_guard.cpp
+    src/screen_capture_portal_guard.h
+)
+target_include_directories(mark-shot-recording-portal-reentry-test PRIVATE src)
+target_link_libraries(mark-shot-recording-portal-reentry-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME recording-portal-reentry COMMAND mark-shot-recording-portal-reentry-test)
+
 qt_add_executable(mark-shot-recording-capture-backend-test
     tests/recording_capture_backend_test.cpp
     src/recording/recording_capture_backend.cpp
