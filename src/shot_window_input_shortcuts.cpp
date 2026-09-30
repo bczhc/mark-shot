@@ -176,6 +176,14 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    // Shift+S 切换标注界面外壳显示,仅保留已绘制标注
+    if (event->key() == Qt::Key_S && event->modifiers() == Qt::ShiftModifier
+        && m_mode == Mode::Editing && !m_dragging && !event->isAutoRepeat()) {
+        toggleAnnotationChrome();
+        event->accept();
+        return;
+    }
+
     if (m_mode == Mode::Selecting && activeRecordingAvailable() && event->key() == Qt::Key_S) {
         stopActiveRecordingFromOverlay();
         event->accept();

@@ -332,6 +332,18 @@ void ShotWindow::updateAnnotationPropertyPanel()
         return;
     }
 
+    // 外壳隐藏时强制收起属性面板,避免绘制或选中标注时重新弹出
+    if (m_chromeHidden) {
+        m_annotationPropertyPanel->hide();
+        if (m_propertyColorDialogPanel) {
+            m_propertyColorDialogPanel->hide();
+        }
+        if (m_propertyFontPanel) {
+            m_propertyFontPanel->hide();
+        }
+        return;
+    }
+
     const QVector<int> selectedIds = selectedAnnotationIds();
     const Annotation *annotation = selectedIds.size() == 1
         ? annotationById(selectedIds.first())

@@ -49,6 +49,7 @@ void ShotWindow::enterFullscreenAnnotation(bool resetAnnotations)
     attachSelectionPointer();
     m_dragging = false;
     m_fullscreenAnnotation = true;
+    m_chromeHidden = false;
     applyToolbarLayout();
     updateMinimumImageWindowSize();
     m_toolbarDragging = false;
@@ -105,6 +106,7 @@ void ShotWindow::leaveFullscreenAnnotation()
     m_toolbarUserPlaced = false;
     m_actionToolbarUserPlaced = false;
     m_fullscreenAnnotation = false;
+    m_chromeHidden = false;
     m_toolbarVerticalLayout = false;
     applyToolbarLayout();
     m_selectionDrag = SelectionDrag::None;
@@ -145,6 +147,39 @@ void ShotWindow::leaveFullscreenAnnotation()
     updateOpenWithPanelGeometry();
     updateExtensionPanelGeometry();
     updateAnnotationPropertyPanelGeometry();
+    updateToolbarState();
+    update();
+}
+
+void ShotWindow::toggleAnnotationChrome()
+{
+    commitTextEditor();
+    m_chromeHidden = !m_chromeHidden;
+
+    if (m_chromeHidden) {
+        hideTransientPanels();
+        if (m_toolbar) {
+            m_toolbar->hide();
+        }
+        if (m_actionToolbar) {
+            m_actionToolbar->hide();
+        }
+        if (m_selectionSizePanel) {
+            m_selectionSizePanel->hide();
+        }
+    } else {
+        if (m_toolbar) {
+            m_toolbar->show();
+        }
+        if (m_actionToolbar && !m_fullscreenAnnotation) {
+            m_actionToolbar->show();
+        }
+        updateToolbarGeometry();
+        updateActionToolbarGeometry();
+        updateAnnotationPropertyPanelGeometry();
+        updateAnnotationPropertyPanel();
+    }
+
     updateToolbarState();
     update();
 }

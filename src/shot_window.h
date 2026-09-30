@@ -341,6 +341,8 @@ private:
     void applyToolbarLayout();
     void enterFullscreenAnnotation(bool resetAnnotations);
     void leaveFullscreenAnnotation();
+    /// @brief 切换标注界面外壳(工具栏、属性面板等)的显示状态,仅保留已绘制标注
+    void toggleAnnotationChrome();
     void toggleColorPalette(QPoint position);
     void toggleOpenWithPanel();
     void toggleExtensionPanel();
@@ -593,6 +595,8 @@ private:
     bool m_annotationHistoryCaptured = false;
     bool m_annotationSelectionBoxActive = false;
     bool m_fullscreenAnnotation = false;
+    // 标注界面外壳(工具栏、属性面板、选区边框等)是否被临时隐藏,仅显示已绘制标注
+    bool m_chromeHidden = false;
     bool m_toolbarDragging = false;
     bool m_toolbarUserPlaced = false;
     bool m_actionToolbarUserPlaced = false;

@@ -103,47 +103,50 @@ void ShotWindow::paintEvent(QPaintEvent *event)
         }
         painter.restore();
 
-        painter.setPen(QPen(QColor(94, 234, 212), 2.0));
-        painter.setBrush(Qt::NoBrush);
-        painter.drawRoundedRect(widgetSelection, 3.0, 3.0);
+        // 全屏标注模式下不再描画选区边框;隐藏外壳时同样只保留标注内容
+        if (!m_fullscreenAnnotation && !m_chromeHidden) {
+            painter.setPen(QPen(QColor(94, 234, 212), 2.0));
+            painter.setBrush(Qt::NoBrush);
+            painter.drawRoundedRect(widgetSelection, 3.0, 3.0);
 
-        if (m_tool == Tool::Move && !m_fullscreenAnnotation) {
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(94, 234, 212));
-            const QVector<QPointF> handles = {
-                widgetSelection.topLeft(), QPointF(widgetSelection.center().x(), widgetSelection.top()), widgetSelection.topRight(),
-                QPointF(widgetSelection.left(), widgetSelection.center().y()), QPointF(widgetSelection.right(), widgetSelection.center().y()),
-                widgetSelection.bottomLeft(), QPointF(widgetSelection.center().x(), widgetSelection.bottom()), widgetSelection.bottomRight(),
-            };
-            for (const QPointF &handle : handles) {
-                painter.drawRoundedRect(QRectF(handle.x() - 4.0, handle.y() - 4.0, 8.0, 8.0), 2.0, 2.0);
-            }
-        }
-
-        const bool selectionInfoVisible = m_selectionDrag != SelectionDrag::None
-            || (m_showSelectionInfo && m_selectionInfoTimer.isValid() && m_selectionInfoTimer.elapsed() <= 1000);
-        if (selectionInfoVisible) {
-            QString sizeText = QStringLiteral("%1 x %2").arg(qRound(selection.width())).arg(qRound(selection.height()));
-            // 锁定比例时在尺寸后标出比例，提醒拖动会保持比例
-            for (const auto &preset : markshot::selection_aspect::aspectRatioPresets()) {
-                if (m_selectionAspectRatio > 0.0 && std::abs(preset.ratio - m_selectionAspectRatio) < 1e-6) {
-                    sizeText += QStringLiteral("  ") + preset.label;
-                    break;
+            if (m_tool == Tool::Move) {
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(QColor(94, 234, 212));
+                const QVector<QPointF> handles = {
+                    widgetSelection.topLeft(), QPointF(widgetSelection.center().x(), widgetSelection.top()), widgetSelection.topRight(),
+                    QPointF(widgetSelection.left(), widgetSelection.center().y()), QPointF(widgetSelection.right(), widgetSelection.center().y()),
+                    widgetSelection.bottomLeft(), QPointF(widgetSelection.center().x(), widgetSelection.bottom()), widgetSelection.bottomRight(),
+                };
+                for (const QPointF &handle : handles) {
+                    painter.drawRoundedRect(QRectF(handle.x() - 4.0, handle.y() - 4.0, 8.0, 8.0), 2.0, 2.0);
                 }
             }
-            painter.setFont(markshot::theme::uiFont(11, QFont::DemiBold));
-            const QFontMetrics metrics(painter.font());
-            const QRectF labelRect(widgetSelection.left() + 10.0,
-                                   widgetSelection.top() + 10.0,
-                                   metrics.horizontalAdvance(sizeText) + 22.0,
-                                   metrics.height() + 12.0);
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(8, 13, 19, 220));
-            painter.drawRoundedRect(labelRect, 10.0, 10.0);
-            painter.setPen(QColor(204, 251, 241, 238));
-            painter.drawText(labelRect, Qt::AlignCenter, sizeText);
-        } else if (m_showSelectionInfo) {
-            m_showSelectionInfo = false;
+
+            const bool selectionInfoVisible = m_selectionDrag != SelectionDrag::None
+                || (m_showSelectionInfo && m_selectionInfoTimer.isValid() && m_selectionInfoTimer.elapsed() <= 1000);
+            if (selectionInfoVisible) {
+                QString sizeText = QStringLiteral("%1 x %2").arg(qRound(selection.width())).arg(qRound(selection.height()));
+                // 锁定比例时在尺寸后标出比例，提醒拖动会保持比例
+                for (const auto &preset : markshot::selection_aspect::aspectRatioPresets()) {
+                    if (m_selectionAspectRatio > 0.0 && std::abs(preset.ratio - m_selectionAspectRatio) < 1e-6) {
+                        sizeText += QStringLiteral("  ") + preset.label;
+                        break;
+                    }
+                }
+                painter.setFont(markshot::theme::uiFont(11, QFont::DemiBold));
+                const QFontMetrics metrics(painter.font());
+                const QRectF labelRect(widgetSelection.left() + 10.0,
+                                       widgetSelection.top() + 10.0,
+                                       metrics.horizontalAdvance(sizeText) + 22.0,
+                                       metrics.height() + 12.0);
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(QColor(8, 13, 19, 220));
+                painter.drawRoundedRect(labelRect, 10.0, 10.0);
+                painter.setPen(QColor(204, 251, 241, 238));
+                painter.drawText(labelRect, Qt::AlignCenter, sizeText);
+            } else if (m_showSelectionInfo) {
+                m_showSelectionInfo = false;
+            }
         }
     }
 
