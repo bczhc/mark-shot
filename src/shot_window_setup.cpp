@@ -668,3 +668,8 @@ void ShotWindow::setDefaultColor(QColor color)
 {
     setCurrentColor(color);
 }
+
+void ShotWindow::setOutputPath(const QString &path)
+{
+    m_outputPath = path;
+}

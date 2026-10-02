@@ -123,6 +123,9 @@ int main(int argc, char *argv[])
     QCommandLineOption delayOption(QStringLiteral("delay"),
                                    QStringLiteral("Wait the given number of seconds (0-60, decimals allowed) before capturing."),
                                    QStringLiteral("seconds"));
+    QCommandLineOption outputPathOption(QStringLiteral("output-path"),
+                                        QStringLiteral("Save the captured region to this file path instead of showing a dialog. Press Space after selecting to save; pressing Esc exits with status 1."),
+                                        QStringLiteral("path"));
     QCommandLineOption historyOption(QStringLiteral("history"),
                                      QStringLiteral("Open screenshot history without taking a screenshot."));
     QCommandLineOption debugOption(QStringLiteral("debug"),
@@ -150,6 +153,7 @@ int main(int argc, char *argv[])
     parser.addOption(debugLogOption);
     parser.addOption(historyOption);
     parser.addOption(delayOption);
+    parser.addOption(outputPathOption);
     markshot::cli::addHeadlessCaptureOptions(&parser);
     parser.process(app);
 
@@ -303,6 +307,11 @@ int main(int argc, char *argv[])
     }
 
     const QString imagePath = positionalArguments.isEmpty() ? QString() : positionalArguments.first();
+    const QString outputPath = parser.isSet(outputPathOption)
+        ? markshot::expandedConfigPath(parser.value(outputPathOption).trimmed())
+        : QString();
+    // --output-path 单次输出模式：默认按“已取消”返回 1，仅当成功保存后置为 0。
+    auto captureExitCode = std::make_shared<int>(1);
     if (parser.isSet(pinImageOption)) {
         if (!positionalArguments.isEmpty()) {
             QMessageBox::critical(nullptr,
@@ -404,7 +413,9 @@ int main(int argc, char *argv[])
     bool captureActive = false;
     auto launchCapture = [&app,
                           &captureActive,
-                          useRegularWindow](bool startFullscreen,
+                          useRegularWindow,
+                          outputPath,
+                          captureExitCode](bool startFullscreen,
                                         bool requestAllOutputs,
                                         std::optional<markshot::recording::RecordingOptions> regionRecordingOptions = std::nullopt) -> bool {
         if (captureActive) {
@@ -455,6 +466,17 @@ int main(int argc, char *argv[])
                     captureActive = false;
                 }
             });
+        }
+        if (!outputPath.isEmpty()) {
+            for (const QPointer<ShotWindow> &window : std::as_const(windows)) {
+                if (!window) {
+                    continue;
+                }
+                window->setOutputPath(outputPath);
+                QObject::connect(window, &ShotWindow::outputPathSaved, &app, [captureExitCode] {
+                    *captureExitCode = 0;
+                });
+            }
         }
         return true;
     };
@@ -560,10 +582,12 @@ int main(int argc, char *argv[])
                 app.exit(1);
             }
         });
-        return QApplication::exec();
+        const int delayedExitCode = QApplication::exec();
+        return outputPath.isEmpty() ? delayedExitCode : *captureExitCode;
     }
     if (!launchCapture(fullscreenAnnotation, allOutputs)) {
         return 1;
     }
-    return QApplication::exec();
+    const int exitCode = QApplication::exec();
+    return outputPath.isEmpty() ? exitCode : *captureExitCode;
 }

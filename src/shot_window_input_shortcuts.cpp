@@ -184,6 +184,14 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    // --output-path 模式下,选区完成后按空格直接保存到指定路径
+    if (event->key() == Qt::Key_Space && m_mode == Mode::Editing
+        && !m_outputPath.isEmpty() && !m_dragging && !event->isAutoRepeat()) {
+        saveSelectionToOutputPath();
+        event->accept();
+        return;
+    }
+
     if (m_mode == Mode::Selecting && activeRecordingAvailable() && event->key() == Qt::Key_S) {
         stopActiveRecordingFromOverlay();
         event->accept();

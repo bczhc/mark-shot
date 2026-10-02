@@ -370,6 +370,33 @@ void ShotWindow::saveSelection()
     showToast(MS_TR("Save failed"), 2500);
 }
 
+void ShotWindow::saveSelectionToOutputPath()
+{
+    commitTextEditor();
+
+    if (m_outputPath.isEmpty() || !hasUsableSelection()) {
+        return;
+    }
+
+    // --output-path 面向脚本化/一次性输出,保存选区原始像素,不套用 export.imageFrame 相框效果
+    const QImage output = renderedSelection();
+    if (output.isNull()) {
+        return;
+    }
+
+    // 格式跟随文件后缀,无后缀时回退 PNG
+    const QString suffix = QFileInfo(m_outputPath).suffix().toLower();
+    const QByteArray format = suffix.isEmpty() ? QByteArrayLiteral("PNG") : suffix.toLatin1();
+    if (markshot::ensureSavePathDirectory(m_outputPath)
+        && output.save(m_outputPath, format.constData())) {
+        emit outputPathSaved();
+        QTimer::singleShot(150, this, [this] { close(); });
+        return;
+    }
+
+    showToast(MS_TR("Save failed"), 2500);
+}
+
 void ShotWindow::saveSelectionAs()
 {
     commitTextEditor();

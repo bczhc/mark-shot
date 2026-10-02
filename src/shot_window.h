@@ -76,6 +76,8 @@ public:
     void setDefaultTool(Tool tool);
     void setDefaultTools(Tool tool, Tool fullscreenTool);
     void setDefaultColor(QColor color);
+    /// @brief 设置 --output-path 目标路径,设置后编辑模式按空格直接保存到该路径
+    void setOutputPath(const QString &path);
     void showDisplayCaptureTargets(QVector<markshot::display_capture::Target> targets);
     /**
      * 使用已确认录制配置进入区域录制选区状态。
@@ -89,6 +91,8 @@ signals:
     void displayCaptureSnapshotRequested(ShotWindow *window);
     void displayCaptureEditRequested(ShotWindow *window, markshot::display_capture::Target target);
     void sessionCancelRequested();
+    /// @brief --output-path 模式下成功保存到指定路径后发出，用于把进程退出码置为 0
+    void outputPathSaved();
     /// @brief 请求暂时隐藏或恢复同一会话中其他屏幕的截图覆盖层
     /// @param window 发起请求的窗口
     /// @param suspended true 表示隐藏，false 表示恢复显示
@@ -333,6 +337,7 @@ private:
     void setCurrentColor(QColor color);
     void saveSelectionAs();
     void saveSelection();
+    void saveSelectionToOutputPath();
     void revealSelectionInfo();
     void openSettingsAfterClosingCapture();
     void setTool(Tool tool);
@@ -517,6 +522,8 @@ private:
     // Captured source image and image navigation state.
     QImage m_frozenFrame;
     QString m_outputName;
+    // --output-path 目标路径,非空时编辑模式按空格直接保存
+    QString m_outputPath;
     QRect m_sourceGeometry;
     QPointer<QScreen> m_captureScreen;
     QRectF m_frozenImageRect;
